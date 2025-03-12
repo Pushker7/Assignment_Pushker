@@ -10,6 +10,7 @@ target 'Assignment_Pushker' do
   pod 'RealmSwift'
   pod 'RxSwift'
   pod 'RxCocoa'
+  pod 'AlamofireImage'
 
   target 'Assignment_PushkerTests' do
     inherit! :search_paths
