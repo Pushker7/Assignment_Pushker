@@ -12,13 +12,14 @@ import RealmSwift
 
 class FavoritesViewController: UIViewController {
     @IBOutlet weak var favTableView: UITableView!
+    @IBOutlet weak var logOutButton: UIButton!
     
     let viewModel = FavoritesViewModel()
     let disposeBag = DisposeBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        logOutButton.applyStyledAppearance()
         setupTableView()
         bindViewModel()
         viewModel.fetchFavorites()

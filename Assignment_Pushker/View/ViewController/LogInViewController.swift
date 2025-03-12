@@ -22,23 +22,13 @@ class LogInViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        // Do any additional setup after loading the view.
+        validate()
     }
     
-    func setupUI() {
-        self.loginButton.isEnabled = false
-        self.emailTextField.delegate = self
-        self.passwordTextField.delegate = self
-        self.emailTextField.placeholder = "Email"
-        self.passwordTextField.placeholder = "Password"
-
+    func validate(){
         emailTextField.rx.text.orEmpty.bind(to: viewModel.email).disposed(by: disposeBag)
         passwordTextField.rx.text.orEmpty.bind(to: viewModel.password).disposed(by: disposeBag)
-        
-        // Enable button based on validation
         viewModel.isFormValid.bind(to: loginButton.rx.isEnabled).disposed(by: disposeBag)
-        
-        // Handle button tap
         loginButton.rx.tap.subscribe(onNext: { [weak self] in
             self?.navigateToPostsScreen()
         }).disposed(by: disposeBag)
@@ -50,8 +40,17 @@ class LogInViewController: UIViewController, UITextFieldDelegate {
         navigationController?.setViewControllers([tabBarVC], animated: true)
         navigationController?.setViewControllers([tabBarVC], animated: true)
     }
-    
-    //MARK: Action
-    @IBAction func loginButtonAction(_ sender: Any) {}
 }
 
+
+extension LogInViewController {
+    
+    func setupUI() {
+        self.loginButton.isEnabled = false
+        self.emailTextField.delegate = self
+        self.passwordTextField.delegate = self
+        emailTextField.setPlaceholder("Email")
+        passwordTextField.setPlaceholder("Password")
+        loginButton.applyStyledAppearance()
+    }
+}
