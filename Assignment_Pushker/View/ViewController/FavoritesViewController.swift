@@ -8,10 +8,10 @@
 import UIKit
 import RxSwift
 import RxCocoa
-import Realm
+import RealmSwift
 
 class FavoritesViewController: UIViewController {
-    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var favTableView: UITableView!
     
     let viewModel = FavoritesViewModel()
     let disposeBag = DisposeBag()
@@ -19,16 +19,44 @@ class FavoritesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupTableView()
+        bindViewModel()
         viewModel.fetchFavorites()
-        
-        viewModel.favorites.bind(to: tableView.rx.items(cellIdentifier: "PostCell", cellType: PostTableViewCell.self)) { _, post, cell in
-            cell.configure(with: post, isFavorite: false)
-        }.disposed(by: disposeBag)
-        
-        tableView.rx.itemDeleted.subscribe(onNext: { [weak self] indexPath in
-            let post = self?.viewModel.favorites.value[indexPath.row]
-            RealmManager.shared.removeFavorite(post: post!)
-            self?.viewModel.fetchFavorites()
-        }).disposed(by: disposeBag)
+    }
+    
+    private func setupTableView() {
+        favTableView.register(PostTableViewCell.self, forCellReuseIdentifier: PostTableViewCell.identifier)
+        favTableView.rx.itemDeleted
+            .subscribe(onNext: { [weak self] indexPath in
+                guard let self = self else { return }
+                let posts = self.viewModel.favorites.value
+                
+                if indexPath.row < posts.count {
+                    let post = posts[indexPath.row]
+                    RealmManager.shared.removeFavorite(post: post)
+                    self.viewModel.fetchFavorites() // Refresh data
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindViewModel() {
+        viewModel.favorites
+            .observe(on: MainScheduler.instance)
+            .bind(to: favTableView.rx.items(cellIdentifier: PostTableViewCell.identifier, cellType: PostTableViewCell.self)) { _, post, cell in
+                cell.configure(with: post, isFavorite: true)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    @IBAction func logOutAction(_ sender: Any) {
+        UserDefaults.standard.set(false, forKey: "isLoggedIn") // Clear login state
+        guard let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate else { return }
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let loginVC = storyboard.instantiateViewController(withIdentifier: "LogInViewController") as! LogInViewController
+        let navController = UINavigationController(rootViewController: loginVC) // Wrap in NavController
+        sceneDelegate.window?.rootViewController = navController
+        sceneDelegate.window?.makeKeyAndVisible()
     }
 }
+
